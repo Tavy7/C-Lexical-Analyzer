@@ -7,6 +7,7 @@ using namespace std;
 
 struct Analyzer
 {
+    // Vectori cu cuvinte cheie, operatori si separatori
     vector<string> Keywords{ "auto", "and", "bitand", "bitor",
         "bool", "break", "case", "catch", "char", "class",
         "const", "continue", "cin", "cout" , "default", "delete", "do",
@@ -21,6 +22,8 @@ struct Analyzer
         "/", "=", "-=", "*=", "+=", "/=", "++", "--", "==", ":", "&", "#", "::",
         "&&", "||", "!", "!="};
     vector<string> Separators{ "{", "}", ",", "(", ")", ";", ".", "[", "]"};
+
+    // Variabile in care stochez un cod pentru fiecare tip de token
 
     // Var constanta inseamna read only
     // pentru a fi constanta cu adevarat ca sa fie folosita in switch
@@ -37,11 +40,12 @@ struct Analyzer
     static constexpr short int Unknown = -10;
     static constexpr short int IncompleteString = -11;
 
+    // Functie care verifica daca token e comment
     bool isComment(string& str)
     {
         return str == "/*" || str == "//";
     }
-    
+    // Functie care verifica daca token e identifier
     bool isIdentifier(const std::string& str)
     {
         if (isdigit(str[0]))
@@ -68,22 +72,22 @@ struct Analyzer
         }
         return true;
     }
-    
+    // Functie care verifica daca token e string
     bool isString(string& str)
     {
         return str[0] == '"' && str[str.size() - 1] == '"';
     }
-
+    // Functie care verifica daca token e char
     bool isChar(string& str)
     {
         return str[0] == '\'' && str[str.size() - 1] == '\'';
     }
-
+    // Functie care verifica daca token e bool
     bool isBool(string& str)
     {
         return str == "true" || str == "false";
     }
-
+    // Functie care verifica daca token e in lista de keywords
     bool isKeyword(string& str)
     {
         for (string keyword : Keywords)
@@ -93,7 +97,7 @@ struct Analyzer
         }
         return false;
     }
-
+    // Functie care verifica daca token e in lista de operatori
     bool isOperator(string& str)
     {
         for (string op : Operators)
@@ -103,7 +107,7 @@ struct Analyzer
         }
         return false;
     }
-
+    // Functie care verifica daca token e in lista de separatori
     bool isSeparator(string& str)
     {
         for (string separator : Separators)
@@ -114,6 +118,9 @@ struct Analyzer
         return false;
     }
 
+    // Foloseste functiile de mai sus
+    // si returneaza variabila cu codul 
+    // asociat fiecarui tip de token
     int AnalyzeToken(string Token)
     {
         if (isComment(Token))
@@ -214,6 +221,7 @@ vector<pair<int, string>> ScanData(vector<string> Data)
 {
     vector<pair<int, string>> UnknownTokens;
     Analyzer analyzer = Analyzer();
+    int pos = 0;
 
     for (unsigned int lineNumber = 0; lineNumber < Data.size(); lineNumber++)
     {
@@ -224,7 +232,10 @@ vector<pair<int, string>> ScanData(vector<string> Data)
 
         for (string token : Tokens)
         {
-            cout << token << " ";
+            int tokenLength = token.size();
+            cout << "Pos = " << pos << " Token = " << token <<
+                "\tLength = " << tokenLength << "\tType = ";
+            pos += tokenLength;
             int result = analyzer.AnalyzeToken(token);
 
             if (result == analyzer.Comment)
@@ -299,12 +310,14 @@ int main()
     vector<string> Data = ReadDataFromFile();
     vector<pair<int, string>> UnknownTokens = ScanData(Data);
 
+    // Daca exista erori printam acest fapt
     if (UnknownTokens.size() > 0)
-        cout << "\n\nErrors:\n";
+        cout << "\n\nErrors:\nLine\tToken\n";
 
+    // Printam linia si caracterul
     for (pair<int, string> it : UnknownTokens)
     {
-        cout << it.first << " " << it.second << " unknown word\n";
+        cout << it.first << "\t" << it.second << "\tunknown word\n";
     }
     return 0;
 }
