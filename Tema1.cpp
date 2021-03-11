@@ -35,6 +35,7 @@ struct Analyzer
     static constexpr short int Identifier = 17;
     static constexpr short int Characther = 18;
     static constexpr short int Unknown = -10;
+    static constexpr short int IncompleteString = -11;
 
     bool isComment(string& str)
     {
@@ -45,7 +46,7 @@ struct Analyzer
     {
         if (isdigit(str[0]))
             return false;
-        int counter = 0;
+        unsigned int counter = 0;
         if (str[0] == '_')
             counter++;
 
@@ -117,12 +118,12 @@ struct Analyzer
     {
         if (isComment(Token))
             return Comment;
+        if (isString(Token))
+            return String;
         if (isSeparator(Token))
             return Separator;
         if (isOperator(Token))
             return Operator;
-        if (isString(Token))
-            return String;
         if (isChar(Token))
             return Characther;
         if (isBool(Token))
@@ -133,6 +134,8 @@ struct Analyzer
             return Keyword;
         if (isIdentifier(Token))
             return Identifier;
+        if (Token[0] == '\"' && Token[Token.size() - 1] != '\"')
+            return IncompleteString;
             
         return Unknown;
     }
@@ -172,11 +175,13 @@ vector<string> TokenizeWordsFromString(string Sentence, char Separator = ' ')
                     continue;
                 }
             }
+
             if (word != "")
             {
                 Tokens.push_back(word);
                 word = "";
             }
+
             Tokens.push_back(chrButString);
             continue;
         }
@@ -215,7 +220,8 @@ vector<pair<int, string>> ScanData(vector<string> Data)
         cout << "\nLine " << lineNumber << " " << Data[lineNumber]<<endl;
         
         vector<string> Tokens = TokenizeWordsFromString(Data[lineNumber]);
-        
+        pair<int, string> UnknownTokenPair;
+
         for (string token : Tokens)
         {
             cout << token << " ";
@@ -255,7 +261,12 @@ vector<pair<int, string>> ScanData(vector<string> Data)
                 break;
             case analyzer.Unknown:
                 cout << "Necunoscut\n";
-                pair<int, string> UnknownTokenPair = make_pair(lineNumber, token);
+                UnknownTokenPair = make_pair(lineNumber, token);
+                UnknownTokens.push_back(UnknownTokenPair);
+                break;
+            case analyzer.IncompleteString:
+                cout << "String gresit\n";
+                UnknownTokenPair = make_pair(lineNumber, token);
                 UnknownTokens.push_back(UnknownTokenPair);
                 break;
             };
@@ -287,6 +298,9 @@ int main()
 {
     vector<string> Data = ReadDataFromFile();
     vector<pair<int, string>> UnknownTokens = ScanData(Data);
+
+    if (UnknownTokens.size() > 0)
+        cout << "\n\nErrors:\n";
 
     for (pair<int, string> it : UnknownTokens)
     {
